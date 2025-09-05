@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Controle de Estoque</title>
+<link href="style.css" rel="stylesheet">
+</head>
+<body>
+<div class="container">
+    <h1>Controle de Estoque</h1>
+    <form id="formProduto">
+        <input type="text" placeholder="Código de barras" name="codigo_barras" required>
+        <input type="text" placeholder="Nome do produto" name="nome" required>
+        <input type="text" placeholder="Código interno" name="codigo_interno" required>
+        <input type="number" placeholder="Quantidade" name="quantidade" required>
+        <input type="date" name="validade" required>
+        <button type="submit">Adicionar Produto</button>
+    </form>
+
+    <table id="tabelaProdutos">
+        <thead>
+            <tr>
+                <th>Código</th>
+                <th>Nome</th>
+                <th>Código Interno</th>
+                <th>Quantidade</th>
+                <th>Validade</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <button id="exportBtn">Exportar para Excel</button>
+</div>
+<script src="script.js"></script>
+</body>
+</html>
