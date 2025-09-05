@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import App from "./App";
+import App from "./app";
 import "./index.css"; // Importa estilos globais (ex.: Tailwind)
 
 // 🔹 Pega o elemento root do index.html
