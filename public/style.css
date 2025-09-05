@@ -1,0 +1,27 @@
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+table tr td {
+    text-align: center;
+    vertical-align: middle;
+}
+
+table tr.vencido {
+    background-color: #f87171; /* vermelho */
+}
+
+table tr.proximo {
+    background-color: #facc15; /* amarelo */
+}
+
+table tr.estoqueBaixo {
+    background-color: #fb923c; /* laranja */
+}
+
+table img {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 6px;
+}
