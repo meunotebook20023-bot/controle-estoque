@@ -1,83 +1,94 @@
 const express = require('express');
-const bodyParser = require('body-parser');
-const sqlite3 = require('sqlite3').verbose();
-const XLSX = require('xlsx');
 const multer = require('multer');
-const fs = require('fs');
+const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
+const ExcelJS = require('exceljs');
 
 const app = express();
-const db = new sqlite3.Database('./database.db');
+const PORT = 3000;
 
-const upload = multer({ dest: 'public/uploads/' });
+// Middleware
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use('/public', express.static(path.join(__dirname, 'public')));
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.static('public'));
-
-// Criar tabela se não existir
-db.run(`CREATE TABLE IF NOT EXISTS produtos (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    codigo_barras TEXT,
-    nome TEXT,
-    codigo_interno TEXT,
-    quantidade INTEGER,
-    validade TEXT,
-    categoria TEXT,
-    localizacao TEXT,
-    imagem TEXT
-)`);
-
-// Adicionar produto
-app.post('/add', upload.single('imagem'), (req, res) => {
-    const { codigo_barras, nome, codigo_interno, quantidade, validade, categoria, localizacao } = req.body;
-    let imagem = req.file ? '/uploads/' + req.file.filename : '';
-
-    // Se não enviar imagem, buscar automaticamente via Unsplash
-    if(!imagem){
-        imagem = `https://source.unsplash.com/160x160/?${encodeURIComponent(nome)}`;
+// Upload de imagens
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        const dir = path.join(__dirname, 'public/uploads');
+        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+        cb(null, dir);
+    },
+    filename: function (req, file, cb) {
+        cb(null, Date.now() + path.extname(file.originalname));
     }
+});
+const upload = multer({ storage });
 
-    db.run(`INSERT INTO produtos (codigo_barras, nome, codigo_interno, quantidade, validade, categoria, localizacao, imagem)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        [codigo_barras, nome, codigo_interno, quantidade, validade, categoria, localizacao, imagem],
-        function(err){
-            if(err) return res.status(500).send(err.message);
-            res.send({ id: this.lastID });
-        });
+// Produtos em memória
+let produtos = [];
+
+// Rotas
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public/index.html'));
 });
 
-// Obter produtos
 app.get('/produtos', (req, res) => {
-    db.all(`SELECT * FROM produtos`, [], (err, rows) => {
-        if(err) return res.status(500).send(err.message);
-        res.send(rows);
-    });
+    res.json(produtos);
 });
 
-// Exportar para Excel
-app.get('/export', (req, res) => {
-    db.all(`SELECT * FROM produtos`, [], (err, rows) => {
-        if(err) return res.status(500).send(err.message);
+app.post('/add', upload.single('imagem'), (req, res) => {
+    const { nome, codigo_interno, categoria, localizacao, quantidade, validade } = req.body;
+    const imagem = req.file ? `/public/uploads/${req.file.filename}` : '';
 
-        const data = rows.map(r => ({
-            "Código de Barras": r.codigo_barras,
-            "Nome": r.nome,
-            "Código Interno": r.codigo_interno,
-            "Categoria": r.categoria,
-            "Localização": r.localizacao,
-            "Quantidade": r.quantidade,
-            "Validade": r.validade
-        }));
-
-        const wb = XLSX.utils.book_new();
-        const ws = XLSX.utils.json_to_sheet(data);
-        XLSX.utils.book_append_sheet(wb, ws, 'Estoque');
-
-        const filePath = path.join(__dirname, 'public/estoque.xlsx');
-        XLSX.writeFile(wb, filePath);
-        res.download(filePath);
+    produtos.push({
+        nome,
+        codigo_interno,
+        categoria,
+        localizacao,
+        quantidade: parseInt(quantidade),
+        validade,
+        imagem
     });
+    res.status(200).send('Produto adicionado com sucesso');
 });
 
-app.listen(3000, () => console.log('Servidor rodando na porta 3000'));
+app.get('/export', async (req, res) => {
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet('Estoque');
+
+    sheet.columns = [
+        { header: 'Nome', key: 'nome', width: 25 },
+        { header: 'Código Interno', key: 'codigo_interno', width: 20 },
+        { header: 'Categoria', key: 'categoria', width: 15 },
+        { header: 'Localização', key: 'localizacao', width: 15 },
+        { header: 'Quantidade', key: 'quantidade', width: 10 },
+        { header: 'Validade', key: 'validade', width: 15 },
+        { header: 'Imagem', key: 'imagem', width: 30 }
+    ];
+
+    produtos.forEach(p => {
+        sheet.addRow({
+            nome: p.nome,
+            codigo_interno: p.codigo_interno,
+            categoria: p.categoria,
+            localizacao: p.localizacao,
+            quantidade: p.quantidade,
+            validade: p.validade,
+            imagem: p.imagem
+        });
+    });
+
+    res.setHeader(
+        'Content-Type',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    );
+    res.setHeader('Content-Disposition', 'attachment; filename=estoque.xlsx');
+
+    await workbook.xlsx.write(res);
+    res.end();
+});
+
+app.listen(PORT, () => console.log(`Servidor rodando em http://localhost:${PORT}`));
