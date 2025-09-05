@@ -1,12 +1,12 @@
 import React from "react";
 
-export default function RelatorioComissao() {
+function Relatorio() {
   return (
     <div>
-      <h2 className="text-2xl font-bold mb-4">📊 Relatório de Comissão</h2>
-      <p className="text-gray-700">
-        Aqui você poderá visualizar relatórios de vendas e calcular comissões.
-      </p>
+      <h2>📊 Relatório</h2>
+      <p>Aqui você poderá ver os relatórios de estoque e comissão.</p>
     </div>
   );
 }
+
+export default Relatorio;
