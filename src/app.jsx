@@ -1,13 +1,13 @@
 import { BrowserRouter as Router, Routes, Route, NavLink, Outlet } from "react-router-dom";
 import { useState } from "react";
-import { Menu, X } from "lucide-react"; // Ícones de menu responsivo
+import { Menu, X } from "lucide-react";
 
-// 🔹 Imports das páginas (use PascalCase e .jsx para evitar erros em Linux/macOS)
+// 🔹 Páginas
 import Home from "./pages/home.jsx";
 import Produtos from "./pages/produtos.jsx";
 import RelatorioComissao from "./pages/relatoriocomissao.jsx";
 
-/* 🔹 Layout principal */
+/* Layout principal */
 function Layout() {
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -64,7 +64,7 @@ function Layout() {
   );
 }
 
-/* 🔹 Componente de Link de Navegação */
+/* Componente de link da navbar */
 function NavItem({ to, label, end = false, onClick }) {
   return (
     <NavLink
@@ -82,7 +82,7 @@ function NavItem({ to, label, end = false, onClick }) {
   );
 }
 
-/* 🔹 Rotas principais */
+/* Rotas principais */
 export default function App() {
   return (
     <Router>
