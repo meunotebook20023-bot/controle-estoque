@@ -1,22 +1,41 @@
 import React, { useState, useEffect } from "react";
 
+// Banco de produtos fictício (poderia ser substituído por API externa)
+const catalogo = {
+  "7894900011517": { nome: "Arroz Branco 5kg", quantidade: 1 },
+  "7891910000197": { nome: "Feijão Carioca 1kg", quantidade: 1 },
+  "7891000100103": { nome: "Coca-Cola 2L", quantidade: 1 },
+  "7891528012226": { nome: "Sabonete Dove", quantidade: 1 },
+};
+
 export default function Produtos() {
   const [nome, setNome] = useState("");
   const [codigo, setCodigo] = useState("");
   const [quantidade, setQuantidade] = useState(1);
-  const [fotoPreview, setFotoPreview] = useState(null); // preview da imagem antes de salvar
+  const [fotoPreview, setFotoPreview] = useState(null);
   const [produtos, setProdutos] = useState([]);
 
-  // Buscar produtos já salvos no localStorage
+  // Buscar produtos salvos no localStorage
   useEffect(() => {
     const produtosSalvos = JSON.parse(localStorage.getItem("produtos")) || [];
     setProdutos(produtosSalvos);
   }, []);
 
-  // Salvar no localStorage sempre que a lista mudar
+  // Salvar no localStorage sempre que atualizar
   useEffect(() => {
     localStorage.setItem("produtos", JSON.stringify(produtos));
   }, [produtos]);
+
+  // Quando o usuário digitar o código, preencher os dados automaticamente
+  const handleCodigoChange = (e) => {
+    const value = e.target.value;
+    setCodigo(value);
+
+    if (catalogo[value]) {
+      setNome(catalogo[value].nome);
+      setQuantidade(catalogo[value].quantidade);
+    }
+  };
 
   // Upload de imagem
   const handleFileChange = (e) => {
@@ -24,23 +43,22 @@ export default function Produtos() {
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setFotoPreview(reader.result); // mostra a foto imediatamente
+        setFotoPreview(reader.result);
       };
       reader.readAsDataURL(file);
     }
   };
 
-  // Cadastrar novo produto
+  // Adicionar produto
   const handleSubmit = (e) => {
     e.preventDefault();
 
     if (!nome || !codigo) {
-      alert("Preencha o nome e o código do produto!");
+      alert("Preencha o código e nome do produto!");
       return;
     }
 
     const novoProduto = { nome, codigo, quantidade, foto: fotoPreview };
-
     setProdutos([...produtos, novoProduto]);
 
     // Limpar campos
@@ -58,17 +76,17 @@ export default function Produtos() {
       <form onSubmit={handleSubmit} className="space-y-4">
         <input
           type="text"
-          placeholder="Nome do produto"
-          value={nome}
-          onChange={(e) => setNome(e.target.value)}
+          placeholder="Código de barras ou interno"
+          value={codigo}
+          onChange={handleCodigoChange}
           className="w-full p-2 border rounded-md"
         />
 
         <input
           type="text"
-          placeholder="Código de barras ou interno"
-          value={codigo}
-          onChange={(e) => setCodigo(e.target.value)}
+          placeholder="Nome do produto"
+          value={nome}
+          onChange={(e) => setNome(e.target.value)}
           className="w-full p-2 border rounded-md"
         />
 
@@ -88,7 +106,6 @@ export default function Produtos() {
           className="w-full"
         />
 
-        {/* Preview da imagem antes de cadastrar */}
         {fotoPreview && (
           <div className="mt-2">
             <p className="text-sm text-gray-600">Pré-visualização:</p>
@@ -108,7 +125,7 @@ export default function Produtos() {
         </button>
       </form>
 
-      {/* Lista de produtos cadastrados */}
+      {/* Lista de produtos */}
       <h3 className="text-xl font-semibold mt-6 mb-2">📦 Produtos Cadastrados</h3>
       {produtos.length === 0 ? (
         <p className="text-gray-600">Nenhum produto cadastrado ainda.</p>
