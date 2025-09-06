@@ -1,0 +1,30 @@
+name: CI - Controle de Estoque
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: "npm"
+
+      - name: Instalar dependências
+        run: npm install
+
+      - name: Rodar Lint
+        run: npm run lint
+
+      - name: Rodar Build
+        run: npm run build

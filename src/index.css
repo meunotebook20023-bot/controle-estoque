@@ -1,11 +1,7 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 body {
-  font-family: 'Inter', sans-serif;
-  background: url('/bg.jpg') no-repeat center center fixed;
-  background-size: cover;
+  @apply bg-gradient-to-r from-gray-100 to-gray-200;
 }
