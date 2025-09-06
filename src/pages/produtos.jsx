@@ -1,19 +1,12 @@
 import React, { useState, useEffect } from "react";
 
-// Banco de produtos fictício (poderia ser substituído por API externa)
-const catalogo = {
-  "7894900011517": { nome: "Arroz Branco 5kg", quantidade: 1 },
-  "7891910000197": { nome: "Feijão Carioca 1kg", quantidade: 1 },
-  "7891000100103": { nome: "Coca-Cola 2L", quantidade: 1 },
-  "7891528012226": { nome: "Sabonete Dove", quantidade: 1 },
-};
-
 export default function Produtos() {
   const [nome, setNome] = useState("");
   const [codigo, setCodigo] = useState("");
   const [quantidade, setQuantidade] = useState(1);
   const [fotoPreview, setFotoPreview] = useState(null);
   const [produtos, setProdutos] = useState([]);
+  const [carregando, setCarregando] = useState(false);
 
   // Buscar produtos salvos no localStorage
   useEffect(() => {
@@ -26,18 +19,43 @@ export default function Produtos() {
     localStorage.setItem("produtos", JSON.stringify(produtos));
   }, [produtos]);
 
-  // Quando o usuário digitar o código, preencher os dados automaticamente
+  // Buscar informações na API pelo código de barras
+  const buscarProdutoPorCodigo = async (codigoBarras) => {
+    try {
+      setCarregando(true);
+      const res = await fetch(
+        `https://world.openfoodfacts.org/api/v0/product/${codigoBarras}.json`
+      );
+      const data = await res.json();
+
+      if (data.status === 1) {
+        const produto = data.product;
+        setNome(produto.product_name || "Produto sem nome");
+        setFotoPreview(produto.image_url || null);
+        setQuantidade(1);
+      } else {
+        alert("Produto não encontrado na base global!");
+      }
+    } catch (error) {
+      console.error("Erro ao buscar produto:", error);
+      alert("Erro ao buscar informações do produto.");
+    } finally {
+      setCarregando(false);
+    }
+  };
+
+  // Quando o usuário digitar o código
   const handleCodigoChange = (e) => {
     const value = e.target.value;
     setCodigo(value);
 
-    if (catalogo[value]) {
-      setNome(catalogo[value].nome);
-      setQuantidade(catalogo[value].quantidade);
+    if (value.length >= 8) {
+      // buscar automático se tiver tamanho suficiente
+      buscarProdutoPorCodigo(value);
     }
   };
 
-  // Upload de imagem
+  // Upload manual de imagem
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -76,11 +94,15 @@ export default function Produtos() {
       <form onSubmit={handleSubmit} className="space-y-4">
         <input
           type="text"
-          placeholder="Código de barras ou interno"
+          placeholder="Código de barras"
           value={codigo}
           onChange={handleCodigoChange}
           className="w-full p-2 border rounded-md"
         />
+
+        {carregando && (
+          <p className="text-sm text-blue-600">🔄 Buscando informações...</p>
+        )}
 
         <input
           type="text"
@@ -108,7 +130,7 @@ export default function Produtos() {
 
         {fotoPreview && (
           <div className="mt-2">
-            <p className="text-sm text-gray-600">Pré-visualização:</p>
+            <p className="text-sm text-gray-600">Imagem do produto:</p>
             <img
               src={fotoPreview}
               alt="Pré-visualização"
