@@ -1,21 +1,11 @@
-/* Importando fonte Inter */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
 
-/* Tailwind base */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 body {
   font-family: 'Inter', sans-serif;
-
-  /* Fundo com a imagem */
-  background-image: url('/bg.jpg.webp'); /* coloque a imagem dentro da pasta /public */
-  background-size: cover;      /* cobre toda a tela */
-  background-position: center; /* centraliza */
-  background-repeat: no-repeat;
-  min-height: 100vh;
-
-  /* fallback se a imagem não carregar */
-  background-color: #f8f9fa;
+  background: url('/bg.jpg') no-repeat center center fixed;
+  background-size: cover;
 }
