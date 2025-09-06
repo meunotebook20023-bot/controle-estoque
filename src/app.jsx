@@ -8,8 +8,8 @@ function App() {
   return (
     <Router>
       <div
-        className="min-h-screen bg-cover bg-center"
-        style={{ backgroundImage: "url('/bg.jpg')" }} // coloque sua imagem na pasta public
+        className="min-h-screen bg-cover bg-center font-sans"
+        style={{ backgroundImage: "url('/bg.jpg.webp')" }} // imagem na pasta public
       >
         {/* Navbar */}
         <header className="bg-blue-700 bg-opacity-90 text-white p-4 shadow-md">
@@ -30,7 +30,7 @@ function App() {
         </header>
 
         {/* Conteúdo */}
-        <main className="p-6 max-w-6xl mx-auto">
+        <main className="p-6 max-w-6xl mx-auto bg-white bg-opacity-90 rounded-xl shadow-lg mt-6">
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/produtos" element={<Produtos />} />
