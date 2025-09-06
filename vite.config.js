@@ -1,11 +1,12 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
-// 🔹 Ajuste para permitir acesso de outros dispositivos na rede
+// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
+  base: "./", // garante caminhos corretos no Vercel
   server: {
-    host: true,   // Permite acesso externo
-    port: 5173,   // Você pode trocar a porta se quiser
-  },
+    host: true,
+    port: 5173
+  }
 });
