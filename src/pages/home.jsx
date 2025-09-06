@@ -1,14 +1,12 @@
 import React from "react";
 
-function Home() {
+export default function Home() {
   return (
-    <div className="bg-white bg-opacity-80 rounded-2xl shadow-lg p-8 text-center">
-      <h2 className="text-3xl font-bold mb-4">Bem-vindo ao Controle de Estoque</h2>
-      <p className="text-lg text-gray-700">
-        Gerencie seus produtos, acompanhe relatórios e mantenha o controle de tudo 🚀
+    <div className="bg-white p-6 rounded-2xl shadow-md">
+      <h2 className="text-2xl font-bold mb-4">🏠 Bem-vindo ao Sistema de Estoque</h2>
+      <p className="text-gray-700">
+        Gerencie seus produtos, acompanhe relatórios e controle seu inventário de forma prática.
       </p>
     </div>
   );
 }
-
-export default Home;

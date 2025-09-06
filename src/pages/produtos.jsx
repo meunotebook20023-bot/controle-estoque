@@ -1,180 +1,176 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
+import * as XLSX from "xlsx";
 
 export default function Produtos() {
-  const [nome, setNome] = useState("");
-  const [codigo, setCodigo] = useState("");
-  const [quantidade, setQuantidade] = useState(1);
-  const [fotoPreview, setFotoPreview] = useState(null);
-  const [produtos, setProdutos] = useState([]);
-  const [carregando, setCarregando] = useState(false);
+  const [barcode, setBarcode] = useState("");
+  const [produto, setProduto] = useState({
+    nome: "",
+    marca: "",
+    validade: "",
+    quantidade: "",
+    preco: "",
+    imagem: ""
+  });
+  const [produtosLista, setProdutosLista] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  // Buscar produtos salvos no localStorage
-  useEffect(() => {
-    const produtosSalvos = JSON.parse(localStorage.getItem("produtos")) || [];
-    setProdutos(produtosSalvos);
-  }, []);
+  // 🔹 Buscar produto pela API OpenFoodFacts
+  const buscarProduto = async () => {
+    if (!barcode) return;
+    setLoading(true);
 
-  // Salvar no localStorage sempre que atualizar
-  useEffect(() => {
-    localStorage.setItem("produtos", JSON.stringify(produtos));
-  }, [produtos]);
-
-  // Buscar informações na API pelo código de barras
-  const buscarProdutoPorCodigo = async (codigoBarras) => {
     try {
-      setCarregando(true);
       const res = await fetch(
-        `https://world.openfoodfacts.org/api/v0/product/${codigoBarras}.json`
+        `https://world.openfoodfacts.org/api/v0/product/${barcode}.json`
       );
       const data = await res.json();
 
       if (data.status === 1) {
-        const produto = data.product;
-        setNome(produto.product_name || "Produto sem nome");
-        setFotoPreview(produto.image_url || null);
-        setQuantidade(1);
+        setProduto({
+          ...produto,
+          nome: data.product.product_name || "",
+          marca: data.product.brands || "",
+          imagem: data.product.image_url || ""
+        });
       } else {
-        alert("Produto não encontrado na base global!");
+        alert("Produto não encontrado. Preencha manualmente.");
       }
-    } catch (error) {
-      console.error("Erro ao buscar produto:", error);
-      alert("Erro ao buscar informações do produto.");
+    } catch (err) {
+      console.error("Erro ao buscar produto:", err);
+      alert("Erro na busca.");
     } finally {
-      setCarregando(false);
+      setLoading(false);
     }
   };
 
-  // Quando o usuário digitar o código
-  const handleCodigoChange = (e) => {
-    const value = e.target.value;
-    setCodigo(value);
-
-    if (value.length >= 8) {
-      // buscar automático se tiver tamanho suficiente
-      buscarProdutoPorCodigo(value);
-    }
-  };
-
-  // Upload manual de imagem
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFotoPreview(reader.result);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  // Adicionar produto
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
-    if (!nome || !codigo) {
-      alert("Preencha o código e nome do produto!");
+  // 🔹 Salvar produto na lista
+  const salvarProduto = () => {
+    if (!produto.nome) {
+      alert("Informe pelo menos o nome do produto.");
       return;
     }
 
-    const novoProduto = { nome, codigo, quantidade, foto: fotoPreview };
-    setProdutos([...produtos, novoProduto]);
+    setProdutosLista([...produtosLista, produto]);
+    setProduto({
+      nome: "",
+      marca: "",
+      validade: "",
+      quantidade: "",
+      preco: "",
+      imagem: ""
+    });
+    setBarcode("");
+  };
 
-    // Limpar campos
-    setNome("");
-    setCodigo("");
-    setQuantidade(1);
-    setFotoPreview(null);
+  // 🔹 Exportar para Excel
+  const exportarExcel = () => {
+    const ws = XLSX.utils.json_to_sheet(produtosLista);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Produtos");
+    XLSX.writeFile(wb, "estoque.xlsx");
   };
 
   return (
-    <div className="bg-white bg-opacity-90 rounded-xl shadow-lg p-6 max-w-3xl mx-auto">
-      <h2 className="text-2xl font-bold mb-4">📋 Cadastro de Produtos</h2>
+    <div className="bg-white p-6 rounded-2xl shadow-md">
+      <h2 className="text-xl font-bold mb-4">📋 Cadastro de Produtos</h2>
 
-      {/* Formulário */}
-      <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Código de barras */}
+      <div className="flex gap-2 mb-4">
         <input
           type="text"
-          placeholder="Código de barras"
-          value={codigo}
-          onChange={handleCodigoChange}
-          className="w-full p-2 border rounded-md"
+          placeholder="Digite o código de barras"
+          className="border p-2 rounded w-full"
+          value={barcode}
+          onChange={(e) => setBarcode(e.target.value)}
         />
+        <button
+          onClick={buscarProduto}
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+        >
+          🔍 Buscar
+        </button>
+      </div>
 
-        {carregando && (
-          <p className="text-sm text-blue-600">🔄 Buscando informações...</p>
-        )}
+      {loading && <p>⏳ Buscando produto...</p>}
 
+      {/* Formulário manual */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <input
           type="text"
-          placeholder="Nome do produto"
-          value={nome}
-          onChange={(e) => setNome(e.target.value)}
-          className="w-full p-2 border rounded-md"
+          placeholder="Nome do Produto"
+          className="border p-2 rounded"
+          value={produto.nome}
+          onChange={(e) => setProduto({ ...produto, nome: e.target.value })}
         />
-
+        <input
+          type="text"
+          placeholder="Marca"
+          className="border p-2 rounded"
+          value={produto.marca}
+          onChange={(e) => setProduto({ ...produto, marca: e.target.value })}
+        />
+        <input
+          type="date"
+          className="border p-2 rounded"
+          value={produto.validade}
+          onChange={(e) => setProduto({ ...produto, validade: e.target.value })}
+        />
         <input
           type="number"
           placeholder="Quantidade"
-          value={quantidade}
-          onChange={(e) => setQuantidade(e.target.value)}
-          className="w-full p-2 border rounded-md"
-          min="1"
+          className="border p-2 rounded"
+          value={produto.quantidade}
+          onChange={(e) =>
+            setProduto({ ...produto, quantidade: e.target.value })
+          }
         />
-
         <input
-          type="file"
-          accept="image/*"
-          onChange={handleFileChange}
-          className="w-full"
+          type="number"
+          step="0.01"
+          placeholder="Preço"
+          className="border p-2 rounded"
+          value={produto.preco}
+          onChange={(e) => setProduto({ ...produto, preco: e.target.value })}
         />
+      </div>
 
-        {fotoPreview && (
-          <div className="mt-2">
-            <p className="text-sm text-gray-600">Imagem do produto:</p>
-            <img
-              src={fotoPreview}
-              alt="Pré-visualização"
-              className="w-24 h-24 object-cover rounded-md border"
-            />
-          </div>
-        )}
+      {/* Imagem */}
+      {produto.imagem && (
+        <img
+          src={produto.imagem}
+          alt="Produto"
+          className="w-32 mt-4 rounded shadow"
+        />
+      )}
 
+      {/* Botões */}
+      <div className="mt-4 flex gap-3">
         <button
-          type="submit"
-          className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition"
+          onClick={salvarProduto}
+          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
         >
-          ➕ Adicionar Produto
+          💾 Salvar Produto
         </button>
-      </form>
+        <button
+          onClick={exportarExcel}
+          className="bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700"
+        >
+          📑 Exportar Excel
+        </button>
+      </div>
 
       {/* Lista de produtos */}
-      <h3 className="text-xl font-semibold mt-6 mb-2">📦 Produtos Cadastrados</h3>
-      {produtos.length === 0 ? (
-        <p className="text-gray-600">Nenhum produto cadastrado ainda.</p>
-      ) : (
-        <ul className="space-y-3">
-          {produtos.map((p, index) => (
-            <li
-              key={index}
-              className="flex items-center gap-4 border p-3 rounded-md bg-gray-50"
-            >
-              {p.foto && (
-                <img
-                  src={p.foto}
-                  alt={p.nome}
-                  className="w-16 h-16 object-cover rounded-md"
-                />
-              )}
-              <div>
-                <p className="font-bold">{p.nome}</p>
-                <p className="text-sm text-gray-600">Código: {p.codigo}</p>
-                <p className="text-sm text-gray-600">
-                  Quantidade: {p.quantidade}
-                </p>
-              </div>
-            </li>
-          ))}
-        </ul>
+      {produtosLista.length > 0 && (
+        <div className="mt-6">
+          <h3 className="font-bold mb-2">📦 Produtos cadastrados:</h3>
+          <ul className="list-disc pl-6">
+            {produtosLista.map((p, i) => (
+              <li key={i}>
+                {p.nome} - {p.marca} | Qtd: {p.quantidade} | Val: {p.validade} | R$ {p.preco}
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
     </div>
   );
