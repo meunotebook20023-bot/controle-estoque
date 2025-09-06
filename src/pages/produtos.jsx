@@ -26,12 +26,12 @@ export default function Produtos() {
       const data = await res.json();
 
       if (data.status === 1) {
-        setProduto({
-          ...produto,
+        setProduto((prev) => ({
+          ...prev,
           nome: data.product.product_name || "",
           marca: data.product.brands || "",
           imagem: data.product.image_url || ""
-        });
+        }));
       } else {
         alert("Produto não encontrado. Preencha manualmente.");
       }
@@ -40,6 +40,17 @@ export default function Produtos() {
       alert("Erro na busca.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  // 🔹 Upload manual de foto
+  const handleFoto = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setProduto((prev) => ({
+        ...prev,
+        imagem: URL.createObjectURL(file)
+      }));
     }
   };
 
@@ -71,15 +82,17 @@ export default function Produtos() {
   };
 
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-md">
-      <h2 className="text-xl font-bold mb-4">📋 Cadastro de Produtos</h2>
+    <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-md">
+      <h2 className="text-lg sm:text-xl font-bold mb-4">
+        📋 Cadastro de Produtos
+      </h2>
 
       {/* Código de barras */}
-      <div className="flex gap-2 mb-4">
+      <div className="flex flex-col sm:flex-row gap-2 mb-4">
         <input
           type="text"
           placeholder="Digite o código de barras"
-          className="border p-2 rounded w-full"
+          className="border p-2 rounded flex-1"
           value={barcode}
           onChange={(e) => setBarcode(e.target.value)}
         />
@@ -113,7 +126,9 @@ export default function Produtos() {
           type="date"
           className="border p-2 rounded"
           value={produto.validade}
-          onChange={(e) => setProduto({ ...produto, validade: e.target.value })}
+          onChange={(e) =>
+            setProduto({ ...produto, validade: e.target.value })
+          }
         />
         <input
           type="number"
@@ -132,6 +147,14 @@ export default function Produtos() {
           value={produto.preco}
           onChange={(e) => setProduto({ ...produto, preco: e.target.value })}
         />
+
+        {/* Upload de foto manual */}
+        <input
+          type="file"
+          accept="image/*"
+          onChange={handleFoto}
+          className="border p-2 rounded"
+        />
       </div>
 
       {/* Imagem */}
@@ -144,7 +167,7 @@ export default function Produtos() {
       )}
 
       {/* Botões */}
-      <div className="mt-4 flex gap-3">
+      <div className="mt-4 flex flex-col sm:flex-row gap-3">
         <button
           onClick={salvarProduto}
           className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
@@ -161,15 +184,40 @@ export default function Produtos() {
 
       {/* Lista de produtos */}
       {produtosLista.length > 0 && (
-        <div className="mt-6">
+        <div className="mt-6 overflow-x-auto">
           <h3 className="font-bold mb-2">📦 Produtos cadastrados:</h3>
-          <ul className="list-disc pl-6">
-            {produtosLista.map((p, i) => (
-              <li key={i}>
-                {p.nome} - {p.marca} | Qtd: {p.quantidade} | Val: {p.validade} | R$ {p.preco}
-              </li>
-            ))}
-          </ul>
+          <table className="w-full table-auto border-collapse">
+            <thead className="bg-blue-700 text-white">
+              <tr>
+                <th className="p-2">Foto</th>
+                <th className="p-2">Nome</th>
+                <th className="p-2">Marca</th>
+                <th className="p-2">Qtd</th>
+                <th className="p-2">Validade</th>
+                <th className="p-2">Preço</th>
+              </tr>
+            </thead>
+            <tbody>
+              {produtosLista.map((p, i) => (
+                <tr key={i} className="border-b">
+                  <td className="p-2">
+                    {p.imagem && (
+                      <img
+                        src={p.imagem}
+                        alt={p.nome}
+                        className="h-12 w-12 object-cover rounded"
+                      />
+                    )}
+                  </td>
+                  <td className="p-2">{p.nome}</td>
+                  <td className="p-2">{p.marca}</td>
+                  <td className="p-2">{p.quantidade}</td>
+                  <td className="p-2">{p.validade}</td>
+                  <td className="p-2">R$ {p.preco}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </div>
