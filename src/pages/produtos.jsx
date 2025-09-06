@@ -4,7 +4,7 @@ export default function Produtos() {
   const [nome, setNome] = useState("");
   const [codigo, setCodigo] = useState("");
   const [quantidade, setQuantidade] = useState(1);
-  const [foto, setFoto] = useState(null);
+  const [fotoPreview, setFotoPreview] = useState(null); // preview da imagem antes de salvar
   const [produtos, setProdutos] = useState([]);
 
   // Buscar produtos já salvos no localStorage
@@ -18,6 +18,18 @@ export default function Produtos() {
     localStorage.setItem("produtos", JSON.stringify(produtos));
   }, [produtos]);
 
+  // Upload de imagem
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFotoPreview(reader.result); // mostra a foto imediatamente
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   // Cadastrar novo produto
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -27,7 +39,7 @@ export default function Produtos() {
       return;
     }
 
-    const novoProduto = { nome, codigo, quantidade, foto };
+    const novoProduto = { nome, codigo, quantidade, foto: fotoPreview };
 
     setProdutos([...produtos, novoProduto]);
 
@@ -35,19 +47,7 @@ export default function Produtos() {
     setNome("");
     setCodigo("");
     setQuantidade(1);
-    setFoto(null);
-  };
-
-  // Upload de imagem
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFoto(reader.result);
-      };
-      reader.readAsDataURL(file);
-    }
+    setFotoPreview(null);
   };
 
   return (
@@ -87,6 +87,18 @@ export default function Produtos() {
           onChange={handleFileChange}
           className="w-full"
         />
+
+        {/* Preview da imagem antes de cadastrar */}
+        {fotoPreview && (
+          <div className="mt-2">
+            <p className="text-sm text-gray-600">Pré-visualização:</p>
+            <img
+              src={fotoPreview}
+              alt="Pré-visualização"
+              className="w-24 h-24 object-cover rounded-md border"
+            />
+          </div>
+        )}
 
         <button
           type="submit"
